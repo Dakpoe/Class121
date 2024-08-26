@@ -1,55 +1,32 @@
-# import cv2 to capture videofeed
 import cv2
-
 import numpy as np
 
-# attach camera indexed as 0
 camera = cv2.VideoCapture(0)
+camera.set(3, 640)
+camera.set(4, 480)
 
-# setting framewidth and frameheight as 640 X 480
-camera.set(3 , 640)
-camera.set(4 , 480)
-
-# loading the mountain image
 mountain = cv2.imread('mount everest.jpg')
-
-# resizing the mountain image as 640 X 480
-
+mountain = cv2.resize(mountain, (640, 480))
 
 while True:
-
-    # read a frame from the attached camera
-    status , frame = camera.read()
-
-    # if we got the frame successfully
+    status, frame = camera.read()
     if status:
+        frame = cv2.flip(frame, 1)
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        lower_bound = np.array([100, 100, 100])
+        upper_bound = np.array([255, 255, 255])
 
-        # flip it
-        frame = cv2.flip(frame , 1)
+        mask = cv2.inRange(frame_rgb, lower_bound, upper_bound)
+        mask_inv = cv2.bitwise_not(mask)
+        person = cv2.bitwise_and(frame, frame, mask=mask_inv)
+        background = cv2.bitwise_and(mountain, mountain, mask=mask)
+        final_output = cv2.add(person, background)
 
-        # converting the image to RGB for easy processing
-        frame_rgb = cv2.cvtColor(frame , cv2.COLOR_BGR2RGB)
+        cv2.imshow('Anywhere Photo Booth', final_output)
 
-        # creating thresholds
-        lower_bound = np.array([])
-        upper_bound = np.array([])
-
-        # thresholding image
-
-        # inverting the mask
-
-        # bitwise and operation to extract foreground / person
-
-        # final image
-
-        # show it
-        cv2.imshow('frame' , frame)
-
-        # wait of 1ms before displaying another frame
         code = cv2.waitKey(1)
-        if code  ==  32:
+        if code == 32:
             break
 
-# release the camera and close all opened windows
 camera.release()
 cv2.destroyAllWindows()
